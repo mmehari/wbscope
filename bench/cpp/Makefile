@@ -62,7 +62,7 @@ ROBJD:= $(RTLD)/obj_dir
 VERILATOR_ROOT ?= $(shell bash -c 'verilator -V|grep VERILATOR_ROOT| head -1|sed -e " s/^.*=\s*//"')
 VROOT:= $(VERILATOR_ROOT)
 INCS := -I$(VROOT)/include -I$(ROBJD)
-VSRCS:= $(VROOT)/include/verilated.cpp $(VROOT)/include/verilated_vcd_c.cpp
+VSRCS:= $(VROOT)/include/verilated.cpp $(VROOT)/include/verilated_threads.cpp $(VROOT)/include/verilated_vcd_c.cpp
 TBOBJ:= $(ROBJD)/Vwbscope_tb__ALL.a
 TCOBJ:= $(ROBJD)/Vwbscopc_tb__ALL.a
 
