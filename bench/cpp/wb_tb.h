@@ -201,6 +201,7 @@ public:
 		TESTB<VA>::m_core->i_wb_stb  = 1;
 		TESTB<VA>::m_core->i_wb_we   = 0;
 		TESTB<VA>::m_core->i_wb_addr = (a>>2);
+		TESTB<VA>::m_core->i_wb_sel = 0x0f;
 
 		rdidx =0; cnt = 0;
 
