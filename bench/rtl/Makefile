@@ -39,7 +39,7 @@
 ##
 ## }}}
 .PHONY: all
-all: wbscope_tb wbscopc_tb
+all: wbscope_tb wbscopc_tb ahbscope_tb
 
 RTLD := ../../rtl
 VOBJ := obj_dir
@@ -77,6 +77,21 @@ wbscopc_tb: $(VOBJ)/Vwbscopc_tb__ALL.a
 # $(VOBJ)/Vaxiscope_tb.cpp: $(RTLD)/axiscope.v axiscope.v
 #	verilator -trace -cc  -y $(RTLD) wbscope_tb.v
 # $(VOBJ)/Vaxiscope_tb.h: $(VOBJ)/Vwbscope_tb.cpp
+
+# Building the ahbscope test bench
+## {{{
+#
+#
+$(VOBJ)/Vahbscope_tb.cpp: $(RTLD)/ahbscope.v ahbscope_tb.v
+	verilator -Wall -O3 -trace -cc  -y $(RTLD) ahbscope_tb.v
+$(VOBJ)/Vahbscope_tb.h: $(VOBJ)/Vahbscope_tb.cpp
+
+$(VOBJ)/Vahbscope_tb__ALL.a: $(VOBJ)/Vahbscope_tb.cpp $(VOBJ)/Vahbscope_tb.h
+	make --no-print-directory --directory=$(VOBJ) -f Vahbscope_tb.mk
+
+.PHONY: ahbscope_tb
+ahbscope_tb: $(VOBJ)/Vahbscope_tb__ALL.a
+## }}}
 
 .PHONY: clean
 clean:

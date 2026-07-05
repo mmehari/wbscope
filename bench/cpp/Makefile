@@ -55,7 +55,7 @@
 ################################################################################
 ##
 ## }}}
-all: wbscope_tb wbscopc_tb
+all: wbscope_tb wbscopc_tb ahbscope_tb
 CXX  := g++
 RTLD := ../rtl
 ROBJD:= $(RTLD)/obj_dir
@@ -65,6 +65,7 @@ INCS := -I$(VROOT)/include -I$(ROBJD)
 VSRCS:= $(VROOT)/include/verilated.cpp $(VROOT)/include/verilated_threads.cpp $(VROOT)/include/verilated_vcd_c.cpp
 TBOBJ:= $(ROBJD)/Vwbscope_tb__ALL.a
 TCOBJ:= $(ROBJD)/Vwbscopc_tb__ALL.a
+AHBTBOBJ:= $(ROBJD)/Vahbscope_tb__ALL.a
 
 ## WBSCOPE
 ## {{{
@@ -77,12 +78,19 @@ wbscope_tb:	wbscope_tb.cpp $(TBOBJ) $(ROBJD)/Vwbscope_tb.h wb_tb.h testb.h
 wbscopc_tb:	wbscopc_tb.cpp $(TCOBJ) $(ROBJD)/Vwbscopc_tb.h wb_tb.h testb.h
 	$(CXX) $(INCS) wbscopc_tb.cpp $(VSRCS) $(TCOBJ) -o $@
 ## }}}
+ 
+## AHBSCOPE
+## {{{
+ahbscope_tb:	ahbscope_tb.cpp $(AHBTBOBJ) $(ROBJD)/Vahbscope_tb.h ahb_tb.h testb.h
+	$(CXX) $(INCS) ahbscope_tb.cpp $(VSRCS) $(AHBTBOBJ) -o $@
+## }}}
 
 .PHONY: test
 ## {{{
-test:	wbscope_tb wbscopc_tb
+test:	wbscope_tb wbscopc_tb ahbscope_tb
 	./wbscope_tb
 	./wbscopc_tb
+	./ahbscope_tb
 ## }}}
 
 .PHONY: clean
@@ -90,4 +98,6 @@ test:	wbscope_tb wbscopc_tb
 clean:
 	rm -f wbscope_tb     wbscopc_tb
 	rm -f wbscope_tb.vcd wbscopc_tb.vcd
+	rm -f ahbscope_tb
+	rm -f ahbscope_tb.vcd
 ## }}}

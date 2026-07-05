@@ -40,7 +40,7 @@
 ################################################################################
 ##
 ## }}}
-all:	test axi
+all:	test axi ahb
 FBDIR := .
 VDIRFB:= $(FBDIR)/obj_dir
 
@@ -49,6 +49,8 @@ test: $(VDIRFB)/Vwbscope__ALL.a
 test: $(VDIRFB)/Vwbscopc__ALL.a
 .PHONY: axi
 axi: $(VDIRFB)/Vaxilscope__ALL.a
+.PHONY: ahb
+ahb: $(VDIRFB)/Vahbscope__ALL.a
 
 ## Dependencies
 ## {{{
