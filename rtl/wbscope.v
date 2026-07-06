@@ -644,6 +644,17 @@ module wbscope #(
 	end
 
 	always @(*)
+	if (i_wb_cyc)
+		assert(f_outstanding == (br_pre_wb_ack ? 1:0)
+				+ (o_wb_ack ? 1:0));
+	else
+		assert(f_outstanding == 0);
+
+	always @(*)
+	if (o_wb_ack)
+		assert(i_wb_cyc);
+
+	always @(*)
 	if (dr_triggered)
 		assert(dr_primed);
 
