@@ -119,6 +119,10 @@ module ahbscope #(
 	reg	[31:0]		o_bus_data;
 	wire	[4:0]		bw_lgmem;
 	reg			br_level_interrupt;
+`ifdef	FORMAL
+	(* gclk *) reg	gbl_clk;
+	reg	f_past_valid_bus, f_past_valid_gbl, f_past_valid_data;
+`endif
 	// }}}
 
 	assign	bus_clock = HCLK;
@@ -208,7 +212,11 @@ module ahbscope #(
 
 		initial	{ q_iflags, r_iflags } = 6'h0;
 		initial	r_reset_complete = 1'b0;
+`ifdef	FORMAL
+		always @(posedge i_data_clk)
+`else
 		always @(posedge i_data_clk or posedge i_reset)
+`endif
 		if (i_reset)
 		begin
 			{ q_iflags, r_iflags } <= 6'h0;
@@ -228,7 +236,11 @@ module ahbscope #(
 						qq_reset_complete;
 		initial	q_reset_complete = 1'b0;
 		initial	qq_reset_complete = 1'b0;
+`ifdef	FORMAL
+		always @(posedge bus_clock)
+`else
 		always @(posedge bus_clock or posedge i_reset)
+`endif
 		if (i_reset)
 		begin
 			q_reset_complete  <= 1'b0;
@@ -338,7 +350,11 @@ module ahbscope #(
 		reg	[2:0]	r_oflags;
 		initial	q_oflags = 3'h0;
 		initial	r_oflags = 3'h0;
+`ifdef	FORMAL
+		always @(posedge bus_clock)
+`else
 		always @(posedge bus_clock or posedge i_reset)
+`endif
 		if (i_reset || bw_reset_request)
 		begin
 			q_oflags <= 3'h0;
@@ -418,6 +434,170 @@ module ahbscope #(
 	assign	o_interrupt = (bw_stopped)&&(!bw_disable_trigger)
 					&&(!br_level_interrupt);
 	// }}}
+
+`ifdef	FORMAL
+	generate if (SYNCHRONOUS)
+	begin
+		always @(*)
+			assume(i_data_clk == HCLK);
+
+		always @(*)
+			f_past_valid_data = f_past_valid_bus;
+		always @(*)
+			f_past_valid_gbl  = f_past_valid_bus;
+	end else begin
+		localparam	CKSTEP_BITS = 3;
+		localparam [CKSTEP_BITS-1:0]
+				MAX_STEP = { 1'b0, {(CKSTEP_BITS-1){1'b1}} };
+
+		(* anyconst *) wire [CKSTEP_BITS-1:0] f_data_step, f_bus_step;
+		reg	[CKSTEP_BITS-1:0]	f_data_count, f_bus_count;
+
+		always @(*)
+		begin
+			assume(f_data_step > 0);
+			assume(f_bus_step  > 0);
+			assume(f_data_step <= MAX_STEP);
+			assume(f_bus_step  <= MAX_STEP);
+			assume((f_data_step == MAX_STEP)
+				|| (f_bus_step == MAX_STEP));
+		end
+
+		always @(posedge gbl_clk)
+		begin
+			f_data_count <= f_data_count + f_data_step;
+			f_bus_count  <= f_bus_count  + f_bus_step;
+
+			assume(i_data_clk == f_data_count[CKSTEP_BITS-1]);
+			assume(HCLK      == f_bus_count[CKSTEP_BITS-1]);
+		end
+
+		always @(posedge gbl_clk)
+		if (!$rose(i_data_clk))
+		begin
+			assume($stable(i_ce));
+			assume($stable(i_trigger));
+			assume($stable(i_data));
+		end
+
+		always @(posedge gbl_clk)
+		if (!$rose(HCLK))
+		begin
+			assume($stable(HRESETn));
+			assume($stable(HSEL));
+			assume($stable(HADDR));
+			assume($stable(HTRANS));
+			assume($stable(HWRITE));
+			assume($stable(HSIZE));
+			assume($stable(HBURST));
+			assume($stable(HPROT));
+			assume($stable(HWDATA));
+			assume($stable(HREADY));
+		end
+
+		initial { f_past_valid_gbl, f_past_valid_data } = 2'b0;
+		always @(posedge gbl_clk)
+			f_past_valid_gbl <= 1'b1;
+		always @(posedge i_data_clk)
+			f_past_valid_data <= 1'b1;
+	end endgenerate
+
+	initial	f_past_valid_bus = 1'b0;
+	always @(posedge bus_clock)
+		f_past_valid_bus <= 1'b1;
+
+	always @(*)
+	if (!f_past_valid_bus)
+		assume(!HRESETn);
+
+	wire	f_ahb_pending, f_ahb_write, f_ahb_addr, f_ahb_error;
+
+	fahb_slave	fahb(
+		.i_clk(bus_clock),
+		.i_reset(i_reset),
+		.i_hsel(HSEL),
+		.i_haddr(HADDR),
+		.i_htrans(HTRANS),
+		.i_hwrite(HWRITE),
+		.i_hsize(HSIZE),
+		.i_hburst(HBURST),
+		.i_hprot(HPROT),
+		.i_hwdata(HWDATA),
+		.i_hready(HREADY),
+		.i_hrdata(HRDATA),
+		.i_hreadyout(HREADYOUT),
+		.i_hresp(HRESP),
+		.f_pending(f_ahb_pending),
+		.f_write(f_ahb_write),
+		.f_addr(f_ahb_addr),
+		.f_error(f_ahb_error));
+
+	always @(*)
+	begin
+		assert(br_active == f_ahb_pending);
+		assert(br_write  == f_ahb_write);
+		assert(br_addr   == f_ahb_addr);
+		assert(br_error  == f_ahb_error);
+	end
+
+	always @(*)
+	if (!dw_reset && !bw_reset_request)
+		assert(counter <= br_holdoff + 1'b1);
+
+	always @(posedge i_data_clk)
+		assume(!(&br_holdoff));
+
+	always @(posedge i_data_clk)
+	if (!dr_triggered)
+		assert(counter == 0);
+
+	always @(*)
+	if (dr_triggered)
+		assert(dr_primed);
+
+	always @(*)
+	if (dr_stopped)
+		assert(dr_triggered);
+
+	(* anyconst *) reg	[(LGMEM-1):0]	f_addr;
+	reg	[BUSW-1:0]	f_data;
+	reg			f_filled;
+
+	initial	f_filled = 1'b0;
+	always @(posedge i_data_clk)
+	if (dw_reset)
+		f_filled <= 1'b0;
+	else if ((i_ce)&&(!dr_stopped)&&(waddr == f_addr))
+		f_filled <= 1'b1;
+
+	always @(posedge i_data_clk)
+	if (waddr > f_addr)
+		assert(f_filled);
+
+	always @(posedge i_data_clk)
+	if (!f_filled)
+		assert(!dr_primed);
+
+	always @(posedge i_data_clk)
+	if ((i_ce)&&(!dr_stopped)&&(waddr == f_addr))
+		f_data <= wr_piped_data;
+
+	always @(posedge i_data_clk)
+	if (f_filled)
+		assert(mem[f_addr] == f_data);
+
+	always @(posedge bus_clock)
+	if (f_past_valid_bus && $past(!bw_stopped))
+		assert(raddr == 0);
+
+	always @(*)
+	if (o_interrupt)
+	begin
+		assert(bw_stopped);
+		assert(!bw_disable_trigger);
+		assert(!br_level_interrupt);
+	end
+`endif
 
 	// Make verilator happy
 	// {{{

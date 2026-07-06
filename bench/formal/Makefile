@@ -36,7 +36,7 @@
 ##
 ## }}}
 .PHONY: all
-all: wbscope axilscope axisrle memscope
+all: wbscope ahbscope axilscope axisrle memscope
 RTL := ../../rtl
 
 .PHONY: wbscope
@@ -45,6 +45,13 @@ wbscope_sync/PASS: wbscope.sby $(RTL)/wbscope.v fwb_slave.v
 	sby -f wbscope.sby sync
 wbscope_async/PASS: wbscope.sby $(RTL)/wbscope.v fwb_slave.v
 	sby -f wbscope.sby async
+
+.PHONY: ahbscope
+ahbscope: ahbscope_sync/PASS
+ahbscope_sync/PASS: ahbscope.sby $(RTL)/ahbscope.v fahb_slave.v
+	sby -f ahbscope.sby sync
+ahbscope_async/PASS: ahbscope.sby $(RTL)/ahbscope.v fahb_slave.v
+	sby -f ahbscope.sby async
 
 .PHONY: axilscope
 axilscope: axilscope_sync/PASS axilscope_async/PASS
@@ -74,6 +81,7 @@ memscope_prf/PASS: memscope.sby $(RTL)/memscope.v $(WB2AXIP)/skidbuffer.v $(WB2A
 .PHONY: clean
 clean:
 	rm -rf wbscope_*/
+	rm -rf ahbscope_*/
 	rm -rf axilscope_*/
 	rm -rf axisrle_*/
 	rm -rf memscope_*/

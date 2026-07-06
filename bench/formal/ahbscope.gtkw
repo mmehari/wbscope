@@ -1,0 +1,67 @@
+[*]
+[*] GTKWave Analyzer v3.3.86 (w)1999-2017 BSI
+[*]
+[dumpfile] "ahbscope_sync/engine_0/trace.vcd"
+[savefile] "ahbscope.gtkw"
+[timestart] 0
+[size] 1883 600
+[pos] -1 -1
+[sst_width] 270
+[signals_width] 220
+[sst_expanded] 1
+[sst_vpaned_height] 143
+@28
+ahbscope.HRESETn
+ahbscope.HCLK
+ahbscope.HSEL
+ahbscope.HWRITE
+ahbscope.HREADY
+ahbscope.HREADYOUT
+ahbscope.HRESP
+@22
+ahbscope.HADDR[31:0]
+ahbscope.HTRANS[1:0]
+ahbscope.HSIZE[2:0]
+ahbscope.HWDATA[31:0]
+ahbscope.HRDATA[31:0]
+@200
+-
+@28
+ahbscope.i_data_clk
+ahbscope.i_ce
+ahbscope.i_trigger
+@22
+ahbscope.i_data[31:0]
+@200
+-
+@28
+ahbscope.o_interrupt
+ahbscope.br_active
+ahbscope.br_write
+ahbscope.br_addr
+ahbscope.br_error
+ahbscope.bw_reset_request
+ahbscope.bw_reset_complete
+ahbscope.bw_disable_trigger
+ahbscope.bw_manual_trigger
+ahbscope.bw_primed
+ahbscope.bw_triggered
+ahbscope.bw_stopped
+@22
+ahbscope.br_holdoff[19:0]
+ahbscope.counter[19:0]
+ahbscope.raddr[9:0]
+ahbscope.waddr[9:0]
+@28
+ahbscope.dr_primed
+ahbscope.dr_triggered
+ahbscope.dr_stopped
+ahbscope.read_from_data
+ahbscope.write_stb
+ahbscope.write_to_control
+@22
+ahbscope.o_bus_data[31:0]
+ahbscope.mem<000>[31:0]
+ahbscope.mem<001>[31:0]
+ahbscope.mem<002>[31:0]
+ahbscope.mem<003>[31:0]

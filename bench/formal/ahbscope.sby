@@ -1,0 +1,26 @@
+[tasks]
+sync
+async
+
+[options]
+mode prove
+sync: depth 5
+async: depth 35
+async: multiclock on 
+
+[engines]
+smtbmc boolector
+
+[script]
+read -formal ahbscope.v
+read -formal fahb_slave.v
+--pycode-begin--
+cmd = "hierarchy -top ahbscope"
+cmd += " -chparam SYNCHRONOUS %d" % (0 if "async" in tags else 1)
+output(cmd)
+--pycode-end--
+prep -top ahbscope
+
+[files]
+fahb_slave.v
+../../rtl/ahbscope.v
