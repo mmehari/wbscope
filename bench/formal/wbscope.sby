@@ -1,0 +1,26 @@
+[tasks]
+sync
+async
+
+[options]
+mode prove
+sync: depth 5
+async: depth 35
+async: multiclock on 
+
+[engines]
+smtbmc boolector
+
+[script]
+read -formal wbscope.v
+read -formal fwb_slave.v
+--pycode-begin--
+cmd = "hierarchy -top wbscope"
+cmd += " -chparam SYNCHRONOUS %d" % (0 if "async" in tags else 1)
+output(cmd)
+--pycode-end--
+prep -top wbscope
+
+[files]
+fwb_slave.v
+../../rtl/wbscope.v

@@ -1,0 +1,67 @@
+[*]
+[*] GTKWave Analyzer v3.3.86 (w)1999-2017 BSI
+[*]
+[dumpfile] "wbscope_sync/engine_0/trace.vcd"
+[savefile] "wbscope.gtkw"
+[timestart] 0
+[size] 1883 600
+[pos] -1 -1
+[sst_width] 270
+[signals_width] 220
+[sst_expanded] 1
+[sst_vpaned_height] 143
+@28
+wbscope.i_wb_clk
+wbscope.i_wb_cyc
+wbscope.i_wb_stb
+wbscope.i_wb_we
+@22
+wbscope.i_wb_addr
+wbscope.i_wb_data[31:0]
+wbscope.i_wb_sel[3:0]
+@200
+-
+@28
+wbscope.o_wb_stall
+wbscope.o_wb_ack
+@22
+wbscope.o_wb_data[31:0]
+@200
+-
+@28
+wbscope.i_data_clk
+wbscope.i_ce
+wbscope.i_trigger
+@22
+wbscope.i_data[31:0]
+@200
+-
+@28
+wbscope.o_interrupt
+wbscope.bw_reset_request
+wbscope.bw_reset_complete
+wbscope.bw_disable_trigger
+wbscope.bw_manual_trigger
+wbscope.bw_primed
+wbscope.bw_triggered
+wbscope.bw_stopped
+@22
+wbscope.br_holdoff[19:0]
+wbscope.counter[19:0]
+wbscope.raddr[9:0]
+wbscope.waddr[9:0]
+wbscope.this_addr[9:0]
+@28
+wbscope.dr_primed
+wbscope.dr_triggered
+wbscope.dr_stopped
+wbscope.read_address
+wbscope.read_from_data
+wbscope.write_stb
+wbscope.write_to_control
+@22
+wbscope.nxt_mem[31:0]
+wbscope.mem<000>[31:0]
+wbscope.mem<001>[31:0]
+wbscope.mem<002>[31:0]
+wbscope.mem<003>[31:0]

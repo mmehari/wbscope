@@ -146,6 +146,10 @@ module wbscope #(
 	reg	[31:0]		o_bus_data;
 	wire	[4:0]		bw_lgmem;
 	reg			br_level_interrupt;
+`ifdef	FORMAL
+	(* gclk *) reg	gbl_clk;
+	reg	f_past_valid_bus, f_past_valid_gbl, f_past_valid_data;
+`endif
 	// }}}
 
 	assign	bus_clock = i_wb_clk;
@@ -582,6 +586,83 @@ module wbscope #(
 	assign	o_interrupt = (bw_stopped)&&(!bw_disable_trigger)
 					&&(!br_level_interrupt);
 	// }}}
+
+`ifdef	FORMAL
+	generate if (SYNCHRONOUS)
+	begin
+		always @(*)
+			assume(i_data_clk == i_wb_clk);
+
+		always @(*)
+			f_past_valid_data = f_past_valid_bus;
+		always @(*)
+			f_past_valid_gbl  = f_past_valid_bus;
+	end endgenerate
+
+	initial	f_past_valid_bus = 1'b0;
+	always @(posedge bus_clock)
+		f_past_valid_bus <= 1'b1;
+
+	localparam	F_LGDEPTH = 4;
+	wire	[F_LGDEPTH-1:0]	f_nreqs, f_nacks, f_outstanding;
+
+	fwb_slave #(
+		.AW(1),
+		.DW(BUSW),
+		.F_LGDEPTH(F_LGDEPTH),
+		.F_OPT_RMW_BUS_OPTION(1'b1),
+		.F_OPT_DISCONTINUOUS(1'b1)
+	) fwb (
+		.i_clk(bus_clock),
+		.i_reset(!f_past_valid_bus),
+		.i_wb_cyc(i_wb_cyc),
+		.i_wb_stb(i_wb_stb),
+		.i_wb_we(i_wb_we),
+		.i_wb_addr(i_wb_addr),
+		.i_wb_data(i_wb_data),
+		.i_wb_sel(i_wb_sel),
+		.i_wb_ack(o_wb_ack),
+		.i_wb_stall(o_wb_stall),
+		.i_wb_idata(o_wb_data),
+		.i_wb_err(1'b0),
+		.f_nreqs(f_nreqs),
+		.f_nacks(f_nacks),
+		.f_outstanding(f_outstanding)
+	);
+
+	always @(*)
+		assert(!o_wb_stall);
+
+	always @(*)
+		assert(o_wb_ack == (i_wb_cyc && br_wb_ack));
+
+	always @(posedge bus_clock)
+	if (f_past_valid_bus)
+	begin
+		assert(br_pre_wb_ack == $past(bw_cyc_stb));
+		assert(br_wb_ack == ($past(br_pre_wb_ack) && $past(i_wb_cyc)));
+	end
+
+	always @(*)
+	if (dr_triggered)
+		assert(dr_primed);
+
+	always @(*)
+	if (dr_stopped)
+		assert(dr_triggered);
+
+	always @(posedge bus_clock)
+	if (f_past_valid_bus && $past(!bw_stopped))
+		assert(raddr == 0);
+
+	always @(*)
+	if (o_interrupt)
+	begin
+		assert(bw_stopped);
+		assert(!bw_disable_trigger);
+		assert(!br_level_interrupt);
+	end
+`endif
 
 	// Make verilator happy
 	// {{{
